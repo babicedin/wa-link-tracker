@@ -1,9 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import {
-  deleteEmployee,
-  normalizeSlug,
+  deleteLink,
   normalizeWhatsAppNumber,
-  updateEmployee,
+  updateLink,
 } from "@/lib/db";
 
 export async function PUT(
@@ -18,40 +17,34 @@ export async function PUT(
 
   const body = await request.json();
   const name = String(body.name ?? "").trim();
-  const slug = normalizeSlug(String(body.slug ?? ""));
   const whatsapp_number = normalizeWhatsAppNumber(
     String(body.whatsapp_number ?? "")
   );
   const whatsapp_message = String(body.whatsapp_message ?? "").trim();
   const active = body.active !== false;
 
-  if (!name || !slug || !whatsapp_number) {
+  if (!name || !whatsapp_number) {
     return NextResponse.json(
-      { error: "Name, slug, and WhatsApp number are required" },
+      { error: "Name and WhatsApp number are required" },
       { status: 400 }
     );
   }
 
   try {
-    const employee = await updateEmployee(id, {
+    const link = await updateLink(id, {
       name,
-      slug,
       whatsapp_number,
       whatsapp_message,
       active,
     });
 
-    if (!employee) {
-      return NextResponse.json({ error: "Employee not found" }, { status: 404 });
+    if (!link) {
+      return NextResponse.json({ error: "Link not found" }, { status: 404 });
     }
 
-    return NextResponse.json(employee);
-  } catch (err) {
-    const message =
-      err instanceof Error && err.message.includes("UNIQUE")
-        ? "An employee with this slug already exists"
-        : "Failed to update employee";
-    return NextResponse.json({ error: message }, { status: 400 });
+    return NextResponse.json(link);
+  } catch {
+    return NextResponse.json({ error: "Failed to update link" }, { status: 400 });
   }
 }
 
@@ -65,9 +58,9 @@ export async function DELETE(
     return NextResponse.json({ error: "Invalid id" }, { status: 400 });
   }
 
-  const deleted = await deleteEmployee(id);
+  const deleted = await deleteLink(id);
   if (!deleted) {
-    return NextResponse.json({ error: "Employee not found" }, { status: 404 });
+    return NextResponse.json({ error: "Link not found" }, { status: 404 });
   }
 
   return NextResponse.json({ ok: true });

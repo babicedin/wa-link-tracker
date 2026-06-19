@@ -1,26 +1,28 @@
 "use client";
 
 import { FormEvent, useState } from "react";
-import type { EmployeeWithStats } from "@/lib/db";
+import type { LinkWithStats } from "@/lib/db";
+import { normalizeSlug } from "@/lib/slug";
 
 type Props = {
-  employee?: EmployeeWithStats;
+  link?: LinkWithStats;
   onSaved: () => void;
   onCancel: () => void;
 };
 
-export default function EmployeeForm({ employee, onSaved, onCancel }: Props) {
-  const [name, setName] = useState(employee?.name ?? "");
-  const [slug, setSlug] = useState(employee?.slug ?? "");
+export default function LinkForm({ link, onSaved, onCancel }: Props) {
+  const [name, setName] = useState(link?.name ?? "");
   const [whatsappNumber, setWhatsappNumber] = useState(
-    employee?.whatsapp_number ?? ""
+    link?.whatsapp_number ?? ""
   );
   const [whatsappMessage, setWhatsappMessage] = useState(
-    employee?.whatsapp_message ?? ""
+    link?.whatsapp_message ?? ""
   );
-  const [active, setActive] = useState(employee?.active !== 0);
+  const [active, setActive] = useState(link?.active !== 0);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+
+  const previewSlug = link?.slug ?? (normalizeSlug(name) || "your-name");
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
@@ -29,17 +31,14 @@ export default function EmployeeForm({ employee, onSaved, onCancel }: Props) {
 
     const payload = {
       name,
-      slug,
       whatsapp_number: whatsappNumber,
       whatsapp_message: whatsappMessage,
       active,
     };
 
     try {
-      const url = employee
-        ? `/api/employees/${employee.id}`
-        : "/api/employees";
-      const method = employee ? "PUT" : "POST";
+      const url = link ? `/api/employees/${link.id}` : "/api/employees";
+      const method = link ? "PUT" : "POST";
 
       const res = await fetch(url, {
         method,
@@ -49,7 +48,7 @@ export default function EmployeeForm({ employee, onSaved, onCancel }: Props) {
 
       const data = await res.json();
       if (!res.ok) {
-        setError(data.error || "Failed to save employee");
+        setError(data.error || "Failed to save link");
         return;
       }
 
@@ -67,7 +66,7 @@ export default function EmployeeForm({ employee, onSaved, onCancel }: Props) {
       className="bg-white rounded-xl border border-slate-200 p-6 space-y-4"
     >
       <h2 className="text-lg font-semibold text-slate-900">
-        {employee ? "Edit employee" : "Add employee"}
+        {link ? "Edit link" : "Create link"}
       </h2>
 
       <div className="grid gap-4 sm:grid-cols-2">
@@ -81,18 +80,10 @@ export default function EmployeeForm({ employee, onSaved, onCancel }: Props) {
             className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
             required
           />
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-slate-700 mb-1">
-            URL slug
-          </label>
-          <input
-            value={slug}
-            onChange={(e) => setSlug(e.target.value)}
-            placeholder="ahmed"
-            className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
-            required
-          />
+          <p className="text-xs text-slate-400 mt-1">
+            URL slug: /{previewSlug}
+            {!link && " (auto-generated from name)"}
+          </p>
         </div>
         <div>
           <label className="block text-sm font-medium text-slate-700 mb-1">
@@ -106,7 +97,7 @@ export default function EmployeeForm({ employee, onSaved, onCancel }: Props) {
             required
           />
         </div>
-        <div>
+        <div className="sm:col-span-2">
           <label className="block text-sm font-medium text-slate-700 mb-1">
             Pre-filled message (optional)
           </label>
@@ -119,7 +110,7 @@ export default function EmployeeForm({ employee, onSaved, onCancel }: Props) {
         </div>
       </div>
 
-      {employee && (
+      {link && (
         <label className="flex items-center gap-2 text-sm text-slate-700">
           <input
             type="checkbox"
@@ -139,7 +130,7 @@ export default function EmployeeForm({ employee, onSaved, onCancel }: Props) {
           disabled={loading}
           className="rounded-lg bg-emerald-600 text-white px-4 py-2 text-sm font-medium hover:bg-emerald-700 disabled:opacity-50"
         >
-          {loading ? "Saving..." : employee ? "Save changes" : "Add employee"}
+          {loading ? "Saving..." : link ? "Save changes" : "Create link"}
         </button>
         <button
           type="button"

@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import {
   buildWhatsAppUrl,
-  getEmployeeBySlug,
+  getLinkBySlug,
   insertClick,
   migrate,
 } from "@/lib/db";
+import { getCountryFromRequest } from "@/lib/geo";
 
 export const dynamic = "force-dynamic";
 
@@ -15,18 +16,19 @@ export async function GET(
   await migrate();
 
   const { slug } = await params;
-  const employee = await getEmployeeBySlug(slug);
+  const link = await getLinkBySlug(slug);
 
-  if (!employee) {
+  if (!link) {
     return NextResponse.json({ error: "Link not found" }, { status: 404 });
   }
 
   const referrer = request.headers.get("referer");
-  await insertClick(employee.id, referrer);
+  const country = getCountryFromRequest(request);
+  await insertClick(link.id, referrer, country);
 
   const whatsappUrl = buildWhatsAppUrl(
-    employee.whatsapp_number,
-    employee.whatsapp_message
+    link.whatsapp_number,
+    link.whatsapp_message
   );
 
   return NextResponse.redirect(whatsappUrl, { status: 302 });
