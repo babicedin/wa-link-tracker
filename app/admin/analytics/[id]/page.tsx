@@ -1,5 +1,5 @@
 import { migrate } from "@/lib/db";
-import { getAppUrl } from "@/lib/url";
+import { getAppUrlFromRequest } from "@/lib/url";
 import LinkAnalyticsView from "./LinkAnalyticsView";
 
 export const dynamic = "force-dynamic";
@@ -21,5 +21,7 @@ export default async function AnalyticsPage({
     );
   }
 
-  return <LinkAnalyticsView linkId={linkId} baseUrl={getAppUrl()} />;
+  const baseUrl = await getAppUrlFromRequest();
+
+  return <LinkAnalyticsView linkId={linkId} baseUrl={baseUrl} />;
 }
